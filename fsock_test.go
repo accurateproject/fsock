@@ -39,7 +39,7 @@ extra data
 `
 )
 
-func TestindexStringAll(t *testing.T) {
+func TestIndexStringAll(t *testing.T) {
 	testStr := "a,b,c"
 	if indxAll := indexStringAll(testStr, ","); !reflect.DeepEqual([]int{1, 3}, indxAll) {
 		t.Errorf("Expected %+v, received: %+v", []int{1, 3}, indxAll)
@@ -170,28 +170,33 @@ func TestReadEvents(t *testing.T) {
 	FS.connMutex = new(sync.RWMutex)
 	FS.buffer = bufio.NewReader(r)
 	var events int32
+	var mux sync.Mutex
 	FS.eventHandlers = map[string][]func(string, string){
-		"HEARTBEAT":                []func(string, string){func(string, string) { events++ }},
-		"RE_SCHEDULE":              []func(string, string){func(string, string) { events++ }},
-		"CHANNEL_STATE":            []func(string, string){func(string, string) { events++ }},
-		"CODEC":                    []func(string, string){func(string, string) { events++ }},
-		"CHANNEL_CREATE":           []func(string, string){func(string, string) { events++ }},
-		"CHANNEL_CALLSTATE":        []func(string, string){func(string, string) { events++ }},
-		"API":                      []func(string, string){func(string, string) { events++ }},
-		"CHANNEL_EXECUTE":          []func(string, string){func(string, string) { events++ }},
-		"CHANNEL_EXECUTE_COMPLETE": []func(string, string){func(string, string) { events++ }},
-		"CHANNEL_PARK":             []func(string, string){func(string, string) { events++ }},
-		"CHANNEL_HANGUP":           []func(string, string){func(string, string) { events++ }},
-		"CHANNEL_HANGUP_COMPLETE":  []func(string, string){func(string, string) { events++ }},
-		"CHANNEL_UNPARK":           []func(string, string){func(string, string) { events++ }},
-		"CHANNEL_DESTROY":          []func(string, string){func(string, string) { events++ }},
+		"HEARTBEAT":                []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"RE_SCHEDULE":              []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"CHANNEL_STATE":            []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"CODEC":                    []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"CHANNEL_CREATE":           []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"CHANNEL_CALLSTATE":        []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"API":                      []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"CHANNEL_EXECUTE":          []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"CHANNEL_EXECUTE_COMPLETE": []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"CHANNEL_PARK":             []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"CHANNEL_HANGUP":           []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"CHANNEL_HANGUP_COMPLETE":  []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"CHANNEL_UNPARK":           []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
+		"CHANNEL_DESTROY":          []func(string, string){func(string, string) { mux.Lock(); defer mux.Unlock(); events++ }},
 	}
 	go FS.readEvents(make(chan struct{}), make(chan error))
-	w.Write(data)
+	if _, err := w.Write(data); err != nil {
+		t.Fatal(err)
+	}
 	time.Sleep(50 * time.Millisecond)
+	mux.Lock()
 	if events != 45 {
 		t.Error("Error reading events: ", events)
 	}
+	mux.Unlock()
 }
 
 func TestMapChanData(t *testing.T) {

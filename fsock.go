@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"log/syslog"
 	"net"
 	"net/url"
 	"regexp"
@@ -643,7 +642,7 @@ func (self *FSockPool) PushFSock(fsk *FSock) {
 
 // Instantiates a new FSockPool
 func NewFSockPool(maxFSocks int, fsaddr, fspasswd string, reconnects int, maxWaitConn time.Duration,
-	eventHandlers map[string][]func(string, string), eventFilters map[string]string, l *syslog.Writer, connID string) (*FSockPool, error) {
+	eventHandlers map[string][]func(string, string), eventFilters map[string]string, connID string) (*FSockPool, error) {
 	pool := &FSockPool{connID: connID, fsAddr: fsaddr, fsPasswd: fspasswd, reconnects: reconnects, maxWaitConn: maxWaitConn,
 		eventHandlers: eventHandlers, eventFilters: eventFilters}
 	pool.allowedConns = make(chan struct{}, maxFSocks)
